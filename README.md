@@ -1,10 +1,11 @@
-# InsightCN —— 支持 A 股的 AI 投研多智能体
+# InsightCN —— 纯 A 股 AI 投研多智能体
 
 把 **ai-hedge-fund（③ 多智能体架构）** 与 **东方财富 A 股数据（① 数据底座）** 组合，
-做一个**支持 A 股**的 AI 投研多智能体。本仓库基于 [virattt/ai-hedge-fund](https://github.com/virattt/ai-hedge-fund)（MIT）修改而来。
+做一个**只做 A 股**的 AI 投研多智能体。本仓库基于 [virattt/ai-hedge-fund](https://github.com/virattt/ai-hedge-fund)（MIT）修改而来，并已**彻底移除美股相关代码**。
 
-> 原项目只支持美股（FINANCIAL_DATASETS_API）。我们**零改动复用其 19 个分析智能体**，
-> 仅把数据层替换为东方财富 A 股接口，A 股代码（6 位）即插即用。
+> 原项目只支持美股（FINANCIAL_DATASETS_API）。我们在复用其 19 个分析智能体的同时，
+> 把数据层整体替换为东方财富 A 股接口，并**删除了全部美股数据分支与密钥**——
+> 现在仅接受 A 股 6 位代码，非 A 股标的直接返回空。
 
 ## 架构
 - **编排**：`src/main.py` + `src/graph/state.py` 用 LangGraph 风格把多个 agent 串成投研流水线。
@@ -24,8 +25,8 @@
 | 股东增减持 | `get_insider_trades` | 🚧 占位（返回空） | 待接入 |
 | 个股新闻 | `get_company_news` | 🚧 占位（返回空） | 待接入 |
 
-**路由机制**：`api.py` 检测代码 —— 6 位数字（如 `600519`，兼容 `SH600519`）走东方财富；
-其余（如 `AAPL`）仍走原美股 API，原功能零回归。
+**仅支持 A 股**：`api.py` 通过 `is_a_share` 守卫 —— 6 位数字（如 `600519`，兼容 `SH600519`）走东方财富；
+非 A 股代码（如 `AAPL`）直接被拒绝并返回空，项目不再包含任何美股数据分支。
 
 ## 快速开始
 
@@ -61,7 +62,7 @@ python -m src.main --tickers 600519 000858 000568 \
 ```
 - 默认模型 `gpt-4.1`（需 `OPENAI_API_KEY`）。
 - 国内可用 DeepSeek：填 `DEEPSEEK_API_KEY`，模型名用 `deepseek-chat`（详见 `src/llm/models.py`）。
-- 美股标的（如 `AAPL`）同样可跑，自动走原 API。
+- 仅支持 A 股 6 位代码（如 `600519`）；传入非 A 股代码会被直接拒绝。
 
 ## 目录结构
 ```
@@ -80,7 +81,7 @@ InsightCN/
 │   │   ├── models.py          # Pydantic 数据模型（agent 契约）
 │   │   ├── a_share.py         # ★ A 股数据层（新增）
 │   │   └── cache.py
-│   ├── tools/api.py           # ★ 已加 A 股路由
+│   ├── tools/api.py           # ★ 纯 A 股数据访问层（已移除全部美股分支）
 │   ├── graph/  llm/  utils/  cli/  backtesting/
 │   └── main.py                # 入口
 └── data/                      # 生成的 CSV（已 gitignore）

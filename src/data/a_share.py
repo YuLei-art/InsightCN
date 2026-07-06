@@ -1,9 +1,8 @@
 """
-A 股数据层（InsightCN 派生自 ai-hedge-fund）
+A 股数据层（InsightCN）
 
-用东方财富公开接口替换原项目的美股 FINANCIAL_DATASETS_API，
-返回与 ``src.data.models`` 完全一致的 Pydantic 对象，
-从而让 19 个分析智能体“零改动”即可分析 A 股。
+对接东方财富公开接口，返回与 ``src.data.models`` 完全一致的 Pydantic 对象，
+供 19 个分析智能体直接使用。
 
 已实装：
   - get_prices / get_price_data  : 日线行情（前复权），push2his kline
@@ -111,7 +110,7 @@ def get_price_data(
 ):
     import pandas as pd
 
-    prices = get_prices(ticker, start_date, end_date, api_key=api_key)
+    prices = get_prices(ticker, start_date, end_date)
     df = pd.DataFrame([p.model_dump() for p in prices])
     if df.empty:
         return df
@@ -202,7 +201,7 @@ def get_financial_metrics(
 
 
 def get_market_cap(ticker: str, end_date: str, api_key: str = None) -> float | None:
-    metrics = get_financial_metrics(ticker, end_date, api_key=api_key)
+    metrics = get_financial_metrics(ticker, end_date)
     if not metrics:
         return None
     return metrics[0].market_cap

@@ -4,7 +4,7 @@ A 股数据层冒烟测试（无需 LLM / API Key）
 验证：
   1) A 股 6 位代码走东方财富数据层，返回正确的 Pydantic 对象
   2) 行情 / 估值指标可正常获取
-  3) 美股代码（如 AAPL）仍走原美股 API 路由（is_a_share=False），不破坏原功能
+  3) 非 A 股代码（如 AAPL）被明确拒绝（返回空），项目仅服务 A 股
 
 运行：
   cd InsightCN
@@ -25,9 +25,10 @@ def test_routing():
     print("=== 1) 代码路由判断 ===")
     assert is_a_share("600519") is True
     assert is_a_share("SH600519") is True
+    assert is_a_share("000858") is True
     assert is_a_share("AAPL") is False
     assert is_a_share("MSFT") is False
-    print("  A股 600519 -> A股路由  [OK] | 美股 AAPL -> 美股路由 [OK]")
+    print("  A股 600519 / 000858 -> A股路由  [OK] | 美股 AAPL -> 非 A 股 [OK]")
 
 
 def test_prices():
@@ -56,17 +57,19 @@ def test_metrics():
     assert rec.price_to_earnings_ratio is not None
 
 
-def test_us_untouched():
-    print("\n=== 4) 美股代码不触发 A股路由（路由正确，且网络异常优雅降级）===")
-    # 验证 is_a_share 判断正确：AAPL 走原美股分支，不会误入 A股数据层
-    # 美股接口不可达时（无 Key / 网络受限）应优雅返回空，而非抛异常炸图
+def test_non_ashare_rejected():
+    print("\n=== 4) 非 A 股代码被拒绝（项目仅服务 A 股）===")
+    # 美股代码不应进入 A 股数据层，直接返回空
     us = get_prices("AAPL", "2026-01-01", "2026-07-06")
-    print(f"  AAPL 行情 -> {len(us)} 行（路由正确；网络不可达时应为 0，不崩溃）")
+    assert us == [], "非 A 股代码应返回空列表"
+    us_cap = get_market_cap("AAPL", "2026-07-06")
+    assert us_cap is None, "非 A 股代码市值应为 None"
+    print("  AAPL 行情 -> 0 行（已拒绝）[OK] | AAPL 市值 -> None [OK]")
 
 
 if __name__ == "__main__":
     test_routing()
     test_prices()
     test_metrics()
-    test_us_untouched()
-    print("\n[OK] 全部冒烟测试通过：A 股数据层已就绪，19 个智能体可零改动分析 A 股。")
+    test_non_ashare_rejected()
+    print("\n[OK] 全部冒烟测试通过：InsightCN 已纯 A 股化，19 个智能体可零改动分析 A 股。")

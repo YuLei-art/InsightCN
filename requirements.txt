@@ -1,13 +1,20 @@
-# 数据层（已验证可运行，无需 LLM Key）
+# === 数据层（已验证可运行，无需 LLM Key）===
 pandas>=2.2.0
 pydantic>=2.0.0
 requests>=2.31.0
-
-# A 阶段数据底座：本机可直接用 AkShare；沙箱环境用原生 requests 直连东方财富
+# 本机可直接用 AkShare；沙箱环境用原生 requests 直连东方财富
 akshare>=1.15.0
 
-# 完整多智能体运行需额外安装（默认模型 gpt-4.1，可选 DeepSeek）：
-#   langchain-openai>=0.3.5
-#   openai>=1.0.0
-#   httpx>=0.27.0
-# 详细依赖见上游 pyproject.toml
+# === 多智能体运行依赖（LLM 投研，需 API Key）===
+langchain-core>=1.0.0
+langchain-openai>=1.0.0
+langchain-deepseek>=1.0.0
+langchain-groq>=1.0.0
+langchain-anthropic>=1.0.0
+langchain-google-genai>=4.0.0
+langchain-ollama>=1.0.0
+langchain-xai>=1.0.0
+langchain-gigachat>=0.5.0
+langgraph>=1.0.0
+openai>=1.0.0
+questionary>=2.0.0   # 交互式 CLI（src/main.py）
