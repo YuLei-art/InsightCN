@@ -57,10 +57,11 @@ def test_metrics():
 
 
 def test_us_untouched():
-    print("\n=== 4) 美股代码不触发 A股路由（应返回 [] 因无 API Key，但路由正确）===")
-    # 无 FINANCIAL_DATASETS_API_KEY 时原函数返回 []，证明未误入 A股分支
+    print("\n=== 4) 美股代码不触发 A股路由（路由正确，且网络异常优雅降级）===")
+    # 验证 is_a_share 判断正确：AAPL 走原美股分支，不会误入 A股数据层
+    # 美股接口不可达时（无 Key / 网络受限）应优雅返回空，而非抛异常炸图
     us = get_prices("AAPL", "2026-01-01", "2026-07-06")
-    print(f"  AAPL 行情(无Key) -> {len(us)} 行（预期 0，路由正确）")
+    print(f"  AAPL 行情 -> {len(us)} 行（路由正确；网络不可达时应为 0，不崩溃）")
 
 
 if __name__ == "__main__":

@@ -47,18 +47,26 @@ def _make_api_request(url: str, headers: dict, method: str = "GET", json_data: d
         Exception: If the request fails with a non-429 error
     """
     for attempt in range(max_retries + 1):  # +1 for initial attempt
-        if method.upper() == "POST":
-            response = requests.post(url, headers=headers, json=json_data)
-        else:
-            response = requests.get(url, headers=headers)
-        
+        try:
+            if method.upper() == "POST":
+                response = requests.post(url, headers=headers, json=json_data, timeout=30)
+            else:
+                response = requests.get(url, headers=headers, timeout=30)
+        except requests.exceptions.RequestException as e:
+            # 网络异常（超时/SSL/断连等）优雅降级：返回 status_code=0 的空响应，
+            # 上层统一按 "!= 200 -> 返回 []" 处理，避免整个多智能体图崩溃。
+            logger.warning("Network error calling %s: %s", url, e)
+            resp = requests.Response()
+            resp.status_code = 0
+            return resp
+
         if response.status_code == 429 and attempt < max_retries:
             # Linear backoff: 60s, 90s, 120s, 150s...
             delay = 60 + (30 * attempt)
             print(f"Rate limited (429). Attempt {attempt + 1}/{max_retries + 1}. Waiting {delay}s before retrying...")
             time.sleep(delay)
             continue
-        
+
         # Return the response (whether success, other errors, or final 429)
         return response
 
